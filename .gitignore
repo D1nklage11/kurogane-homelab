@@ -1,0 +1,10 @@
+# Secrets must never be committed
+*.p12
+*.pfx
+*.key
+*.kdbx
+*.reg
+CA-Backup/
+HealthChecker*/
+*HealthChecker*.html
+*HealthChecker*.xml

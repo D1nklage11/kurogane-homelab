@@ -1,0 +1,20 @@
+FirstName,LastName,Login,Department,Title,OU
+Hiroshi,Kageyama,h.kageyama,Management,Studio Director,Management
+Mei,Fujisawa,m.fujisawa,Management,Producer,Management
+Anna,Kovaleva,a.kovaleva,Finance,Chief Accountant,Finance
+Yuki,Sato,y.sato,Finance,Accountant,Finance
+Ren,Iwasaki,r.iwasaki,IT,IT Support Engineer,IT
+Kenji,Tatsumi,k.tatsumi,Development,Lead Programmer,Dev
+Elena,Orlova,e.orlova,Development,Gameplay Programmer,Dev
+Takumi,Mori,t.mori,Development,Engine Programmer,Dev
+Alexander,Volkov,a.volkov,Development,Tools Programmer,Dev
+Ayumi,Nakano,a.nakano,Game Design,Lead Game Designer,Design
+Oleg,Rostov,o.rostov,Game Design,Level Designer,Design
+Rina,Hayashi,r.hayashi,Game Design,Narrative Designer,Design
+Nao,Kuroda,n.kuroda,Art,Art Director,Art
+Victoria,Belova,v.belova,Art,3D Artist,Art
+Sora,Ikeda,s.ikeda,Art,Concept Artist,Art
+Maxim,Lanskoy,m.lanskoy,Art,Technical Artist,Art
+Daiki,Ogawa,d.ogawa,QA,Lead QA Tester,QA
+Irina,Sokolova,i.sokolova,QA,QA Tester,QA
+Kai,Matsuda,k.matsuda,QA,QA Tester,QA
