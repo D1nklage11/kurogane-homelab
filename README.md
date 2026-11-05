@@ -1,6 +1,6 @@
 # Kurogane Digital — домашняя лаборатория Windows-инфраструктуры
 
-> **In English.** A Hyper-V homelab that recreates the Windows infrastructure of a fictional 20-person game studio: two domain controllers with DNS and DHCP failover, a file server, Exchange Server SE, an enterprise PKI, Group Policy, backups verified by restore, and a print server. Every step is documented in a lab journal, including 56 troubleshooting cases with root causes. Documentation is in Russian.
+> **In English.** A Hyper-V homelab that recreates the Windows infrastructure of a fictional 20-person game studio: two domain controllers with DNS and DHCP failover, a file server, Exchange Server SE, an enterprise PKI, Group Policy, backups verified by restore, and a print server. Every step is documented in a lab journal, including 60 troubleshooting cases with root causes. Documentation is in Russian.
 
 Лаборатория воспроизводит инфраструктуру вымышленной игровой студии **Kurogane Digital** (黒鉄, «чёрная сталь»): около 20 сотрудников в семи отделах, игра под NDA, поэтому строгое разграничение доступа. Всё развёрнуто на одном ПК под Hyper-V на Windows Server 2025 и Windows 11.
 
@@ -34,15 +34,23 @@
 | PKI | Корпоративный корневой центр сертификации AD CS, свой шаблон, SAN-сертификат для Exchange, Download Domains | [сертификат в браузере](screenshots/04-owa-certificate.png) |
 | Резервное копирование | Windows Server Backup на всех серверах, бэкап ключа ЦС; восстановление проверено: файл, объект AD, письмо через Recovery Database | [сводка по серверам](screenshots/06-backup-summary.png) |
 | Тест отказа | DC01 выключен: вход, DNS и DHCP работают через DC02; передача ролей FSMO и возврат | [журнал](docs/journal.md#что-сделано) |
-| Печать | Сервер печати, развёртывание принтеров по отделам через GPO, защита после PrintNightmare, служба печати отключена на контроллерах домена | [принтеры на сервере](screenshots/07-printers.png) |
+| Печать | Сервер печати, развёртывание принтеров по отделам через GPO, защита после PrintNightmare; два типа драйверов рядом — v4 (Microsoft PCL6 Class) и v3 (HP Universal Print Driver, предустановка скриптом от SYSTEM, сертификат издателя через GPO); служба печати отключена на контроллерах домена | [принтеры на сервере](screenshots/07-printers.png), [скрипт драйверов](scripts/printing/Install-PrinterDrivers.ps1) |
+
+## Скриншоты
+
+| | |
+| --- | --- |
+| <a href="screenshots/02-gpo-tree.png"><img src="screenshots/02-gpo-tree.png" width="380" alt="Дерево OU и GPO"></a><br>Структура OU и групповые политики | <a href="screenshots/03-replication.png"><img src="screenshots/03-replication.png" width="380" alt="repadmin и dcdiag"></a><br>Репликация без ошибок: repadmin и dcdiag |
+| <a href="screenshots/04-owa-certificate.png"><img src="screenshots/04-owa-certificate.png" width="380" alt="Сертификат OWA"></a><br>Сертификат Exchange от своего центра сертификации | <a href="screenshots/05-message-tracking.png"><img src="screenshots/05-message-tracking.png" width="380" alt="Трекинг письма"></a><br>Путь письма по журналу трекинга |
+| <a href="screenshots/06-backup-summary.png"><img src="screenshots/06-backup-summary.png" width="380" alt="Сводка бэкапов"></a><br>Бэкапы всех серверов: Get-WBSummary | <a href="screenshots/07-printers.png"><img src="screenshots/07-printers.png" width="380" alt="Принтеры на сервере печати"></a><br>Принтеры на сервере печати |
 
 ## Неполадки и их причины
 
-Самое полезное в лабе — то, что ломалось. Все 56 случаев собраны в [таблице проблем и решений](docs/troubleshooting.md). Несколько примеров:
+Самое полезное в лабе — то, что ломалось. Все 60 случаев собраны в [таблице проблем и решений](docs/troubleshooting.md). Несколько примеров:
 
 - **Письма между ящиками не доставлялись: `501 5.1.4`.** Первый почтовый домен был в зоне `.test`, которую RFC 2606 резервирует для тестов, и Exchange отказывается на неё доставлять. Добавил домен `kurogane-digital.ru`, перевёл на него политику адресов и UPN пользователей — без пересборки леса.
 - **При выключенном DC01 клиент показывал `LOGONSERVER = \\DC01`.** Переменная записывается при входе, а сеанс был старым или вход шёл по кэшированным учётным данным. Кто на самом деле выполняет проверку подлинности, видно через `klist` и `nltest /dsgetdc`.
-- **Клиенты подключали принтер через `Microsoft enhanced Point and Print driver`, хотя нужный драйвер был установлен заранее.** Драйвер PCL6 Class относится к поколению v4, а для v4 Windows так делает намеренно. Ослаблять защиту от PrintNightmare ради «правильного» имени драйвера не стал.
+- **Клиенты подключали принтер через `Microsoft enhanced Point and Print driver`, хотя нужный драйвер был установлен заранее.** Драйвер PCL6 Class относится к поколению v4, а для v4 Windows так делает намеренно. Ослаблять защиту от PrintNightmare не стал: для второго принтера перешёл на v3-драйвер HP, который ставится на клиенты скриптом автозагрузки. По пути выяснилось, что `pnputil` от SYSTEM отклоняет пакет с подписью самой HP, пока сертификат издателя не попадёт в «Доверенные издатели», — раздал его через GPO.
 - **После передачи ролей FSMO `dcdiag /test:fsmocheck` не находил PDC.** Контроллер держал в кэше устаревший результат поиска. Помогли `ipconfig /flushdns` и `nltest /dsgetdc /pdc /force`. Вывод: роль FSMO хранится в AD, а её местоположение — в DNS, и после передачи проверяют оба.
 
 ## Скрипты
@@ -57,7 +65,7 @@
 ## Документы
 
 - [Журнал лабы](docs/journal.md): обзор, все этапы с проверками, групповые политики, план. Есть [PDF-версия](docs/Kurogane-Journal.pdf).
-- [Проблемы и решения](docs/troubleshooting.md): 56 случаев.
+- [Проблемы и решения](docs/troubleshooting.md): 60 случаев.
 - [Отчёт по групповым политикам](docs/gpo-report.html), выгруженный `Get-GPOReport`. Чтобы открыть его в браузере, скачайте файл.
 
 ## Что дальше
