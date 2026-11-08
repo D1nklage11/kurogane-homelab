@@ -1,0 +1,16 @@
+services:
+  nginx:
+    image: nginx:1.30.6
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./conf.d:/etc/nginx/conf.d:ro
+      - ./certs:/etc/nginx/certs:ro
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true

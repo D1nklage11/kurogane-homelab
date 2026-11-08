@@ -8,3 +8,7 @@ CA-Backup/
 HealthChecker*/
 *HealthChecker*.html
 *HealthChecker*.xml
+# Docker stacks on APP01: real .env with the DB password, TLS keys and certificates
+.env
+certs/
+*.csr

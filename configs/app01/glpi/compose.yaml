@@ -1,0 +1,39 @@
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_RANDOM_ROOT_PASSWORD: "yes"
+      MARIADB_DATABASE: ${GLPI_DB_NAME}
+      MARIADB_USER: ${GLPI_DB_USER}
+      MARIADB_PASSWORD: ${GLPI_DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      retries: 10
+
+  glpi:
+    image: glpi/glpi:12.0.1
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - glpi_data:/var/glpi
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+      - ./ldap.conf:/etc/ldap/ldap.conf:ro
+      - ./apache/remoteip.conf:/etc/apache2/conf-enabled/remoteip.conf:ro
+    networks:
+      - default
+      - proxy
+
+volumes:
+  db_data:
+  glpi_data:
+
+networks:
+  proxy:
+    external: true

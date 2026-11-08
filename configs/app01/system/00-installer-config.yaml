@@ -1,0 +1,20 @@
+# This is the network config written by 'subiquity'
+network:
+  ethernets:
+    eth0:
+      addresses:
+      - 192.168.100.40/24
+      dhcp6: false
+      match:
+        macaddress: 00:15:5d:e9:98:0c
+      nameservers:
+        addresses:
+        - 192.168.100.10
+        - 192.168.100.11
+        search:
+        - corp.kurogane.test
+      routes:
+      - to: default
+        via: 192.168.100.1
+      set-name: eth0
+  version: 2
