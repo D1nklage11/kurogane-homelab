@@ -8,6 +8,8 @@
 
 **Стек:** Windows Server 2025 · Active Directory DS · DNS · DHCP Failover · Group Policy · Windows LAPS · FSRM · Exchange Server SE · AD CS · Windows Server Backup · Print Server · PowerShell · Hyper-V · Ubuntu Server · SSSD · Docker Compose · nginx · GLPI · MariaDB · Prometheus · Grafana · Alertmanager
 
+[![Обзор проекта: все этапы на одной картинке](screenshots/00-overview.png)](screenshots/00-overview.png)
+
 ## Схема
 
 ![Схема лабы](screenshots/01-topology.png)
