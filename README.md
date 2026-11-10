@@ -1,6 +1,6 @@
 # Kurogane Digital — домашняя лаборатория ИТ-инфраструктуры
 
-> **In English.** A Hyper-V homelab that recreates the Windows infrastructure of a fictional 20-person game studio: two domain controllers with DNS and DHCP failover, a file server, Exchange Server SE, an enterprise PKI, Group Policy, backups verified by restore, a print server, and an Ubuntu server joined to AD that runs Docker with a GLPI service desk (AD sign-in over LDAPS, HTTPS behind an nginx reverse proxy, tickets by email through Exchange), an intranet portal, and monitoring with Prometheus, Grafana and Alertmanager (windows_exporter deployed by Group Policy, email alerts through Exchange). Every step is documented in a lab journal, including 82 troubleshooting cases with root causes. Documentation is in Russian.
+> **In English.** A Hyper-V homelab that recreates the Windows infrastructure of a fictional 20-person game studio: two domain controllers with DNS and DHCP failover, a file server, Exchange Server SE, an enterprise PKI, Group Policy, backups verified by restore, a print server, and an Ubuntu server joined to AD that runs Docker with a GLPI service desk (AD sign-in over LDAPS, HTTPS behind an nginx reverse proxy, tickets by email through Exchange), an intranet portal, and monitoring with Prometheus, Grafana and Alertmanager (windows_exporter deployed by Group Policy, email alerts through Exchange). Every step is documented in a lab journal, including 83 troubleshooting cases with root causes. Documentation is in Russian.
 
 Лаборатория воспроизводит инфраструктуру вымышленной игровой студии **Kurogane Digital** (黒鉄, «чёрная сталь»): около 20 сотрудников в семи отделах, игра под NDA, поэтому строгое разграничение доступа. Всё развёрнуто на одном ПК под Hyper-V на Windows Server 2025, Windows 11 и Ubuntu Server.
 
@@ -38,9 +38,9 @@
 | Печать | Сервер печати, развёртывание принтеров по отделам через GPO, защита после PrintNightmare; два типа драйверов рядом — v4 (Microsoft PCL6 Class) и v3 (HP Universal Print Driver, предустановка скриптом от SYSTEM, сертификат издателя через GPO); служба печати отключена на контроллерах домена | [принтеры на сервере](screenshots/07-printers.png), [скрипт драйверов](scripts/printing/Install-PrinterDrivers.ps1) |
 | Linux в домене | Ubuntu Server введён в AD через realmd/SSSD: вход по SSH и sudo только для группы ИТ, время с контроллеров домена, A и PTR в DNS регистрируются сами | [конфиги](configs/app01/system) |
 | Docker | Docker Engine и Compose из официального репозитория, ротация логов; управление только через sudo — группа docker равносильна root | [журнал](docs/journal.md#что-сделано) |
-| Service Desk (GLPI) | GLPI 12 и MariaDB в Docker Compose; вход сотрудников из AD по LDAPS с проверкой сертификата, роли по группам AD; HTTPS через обратный прокси nginx с сертификатом своего ЦС; письмо на helpdesk@ становится заявкой, уведомления и ответы идут через Exchange; реальный IP клиента в журналах | [конфиги](configs/app01) |
-| Портал сотрудников | Внутренний сайт студии в контейнере nginx без открытых портов, HTTPS через тот же обратный прокси с сертификатом своего ЦС | [конфиги](configs/app01/intranet) |
-| Мониторинг | Prometheus, Grafana и Alertmanager в Docker на APP01; windows_exporter на всех серверах через GPO: сценарий автозагрузки выбирает сборщики по ролям сервера, порт открыт только для APP01. Тревоги: недоступность сервера, остановка ключевых служб по ролям, место на дисках, квоты FSRM, расхождение времени на DC; каждая проверена настоящей поломкой. Письма о тревоге и о восстановлении идут через Exchange (SMTP 587, TLS, служебная учётка) | [схема](screenshots/08-monitoring.png), [письмо о тревоге](screenshots/09-alert-email.png), [конфиги](configs/app01/monitoring), [скрипт](scripts/monitoring/Install-WindowsExporter.ps1) |
+| Service Desk (GLPI) | GLPI 12 и MariaDB в Docker Compose; вход сотрудников из AD по LDAPS с проверкой сертификата, роли по группам AD; HTTPS через обратный прокси nginx с сертификатом своего ЦС; письмо на helpdesk@ становится заявкой, уведомления и ответы идут через Exchange; реальный IP клиента в журналах | [заявка из письма](screenshots/13-glpi-ticket.png), [конфиги](configs/app01) |
+| Портал сотрудников | Внутренний сайт студии в контейнере nginx без открытых портов, HTTPS через тот же обратный прокси с сертификатом своего ЦС | [скриншот](screenshots/14-intranet.png), [конфиги](configs/app01/intranet) |
+| Мониторинг | Prometheus, Grafana и Alertmanager в Docker на APP01; windows_exporter на всех серверах через GPO: сценарий автозагрузки выбирает сборщики по ролям сервера, порт открыт только для APP01. Тревоги: недоступность сервера, остановка ключевых служб по ролям, место на дисках, квоты FSRM, расхождение времени на DC; каждая проверена настоящей поломкой. Письма о тревоге и о восстановлении идут через Exchange (SMTP 587, TLS, служебная учётка) | [схема](screenshots/08-monitoring.png), [дашборд](screenshots/10-grafana-windows.png), [правила тревог](screenshots/12-alert-rules.png), [письмо о тревоге](screenshots/09-alert-email.png), [конфиги](configs/app01/monitoring), [скрипт](scripts/monitoring/Install-WindowsExporter.ps1) |
 
 ## Скриншоты
 
@@ -50,10 +50,13 @@
 | <a href="screenshots/04-owa-certificate.png"><img src="screenshots/04-owa-certificate.png" width="380" alt="Сертификат OWA"></a><br>Сертификат Exchange от своего центра сертификации | <a href="screenshots/05-message-tracking.png"><img src="screenshots/05-message-tracking.png" width="380" alt="Трекинг письма"></a><br>Путь письма по журналу трекинга |
 | <a href="screenshots/06-backup-summary.png"><img src="screenshots/06-backup-summary.png" width="380" alt="Сводка бэкапов"></a><br>Бэкапы всех серверов: Get-WBSummary | <a href="screenshots/07-printers.png"><img src="screenshots/07-printers.png" width="380" alt="Принтеры на сервере печати"></a><br>Принтеры на сервере печати |
 | <a href="screenshots/08-monitoring.png"><img src="screenshots/08-monitoring.png" width="380" alt="Схема мониторинга"></a><br>Схема мониторинга: кто кого опрашивает | <a href="screenshots/09-alert-email.png"><img src="screenshots/09-alert-email.png" width="380" alt="Письмо о тревоге"></a><br>Письмо Alertmanager: DC02 недоступен |
+| <a href="screenshots/10-grafana-windows.png"><img src="screenshots/10-grafana-windows.png" width="380" alt="Дашборд Windows в Grafana"></a><br>Grafana: серверы Windows, детали по EX01 | <a href="screenshots/11-prometheus-up.png"><img src="screenshots/11-prometheus-up.png" width="380" alt="Метрика up"></a><br>Метрика `up`: DC02 выключен — по ней сработала тревога TargetDown |
+| <a href="screenshots/12-alert-rules.png"><img src="screenshots/12-alert-rules.png" width="380" alt="Правила тревог"></a><br>Семь правил тревог в Grafana: TargetDown горит, DCTimeOffset в ожидании | <a href="screenshots/13-glpi-ticket.png"><img src="screenshots/13-glpi-ticket.png" width="380" alt="Заявка GLPI из письма"></a><br>GLPI: заявка из письма, ответы по почте, решение |
+| <a href="screenshots/14-intranet.png"><img src="screenshots/14-intranet.png" width="380" alt="Портал сотрудников"></a><br>Портал сотрудников: intranet.kurogane-digital.ru | |
 
 ## Неполадки и их причины
 
-Самое полезное в лабе — то, что ломалось. Все 82 случая собраны в [таблице проблем и решений](docs/troubleshooting.md). Несколько примеров:
+Самое полезное в лабе — то, что ломалось. Все 83 случая собраны в [таблице проблем и решений](docs/troubleshooting.md). Несколько примеров:
 
 - **Письма между ящиками не доставлялись: `501 5.1.4`.** Первый почтовый домен был в зоне `.test`, которую RFC 2606 резервирует для тестов, и Exchange отказывается на неё доставлять. Добавил домен `kurogane-digital.ru`, перевёл на него политику адресов и UPN пользователей — без пересборки леса.
 - **При выключенном DC01 клиент показывал `LOGONSERVER = \\DC01`.** Переменная записывается при входе, а сеанс был старым или вход шёл по кэшированным учётным данным. Кто на самом деле выполняет проверку подлинности, видно через `klist` и `nltest /dsgetdc`.
@@ -76,7 +79,7 @@
 ## Документы
 
 - [Журнал лабы](docs/journal.md): обзор, все этапы с проверками, групповые политики, план. Есть [PDF-версия](docs/Kurogane-Journal.pdf).
-- [Проблемы и решения](docs/troubleshooting.md): 82 случая.
+- [Проблемы и решения](docs/troubleshooting.md): 83 случая.
 - [Отчёт по групповым политикам](docs/gpo-report.html), выгруженный `Get-GPOReport`. Чтобы открыть его в браузере, скачайте файл.
 
 ## Что дальше
