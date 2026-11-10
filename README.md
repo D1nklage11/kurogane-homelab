@@ -1,12 +1,12 @@
 # Kurogane Digital — домашняя лаборатория ИТ-инфраструктуры
 
-> **In English.** A Hyper-V homelab that recreates the Windows infrastructure of a fictional 20-person game studio: two domain controllers with DNS and DHCP failover, a file server, Exchange Server SE, an enterprise PKI, Group Policy, backups verified by restore, a print server, and an Ubuntu server joined to AD that runs Docker with a GLPI service desk (AD sign-in over LDAPS, HTTPS behind an nginx reverse proxy, tickets by email through Exchange). Every step is documented in a lab journal, including 74 troubleshooting cases with root causes. Documentation is in Russian.
+> **In English.** A Hyper-V homelab that recreates the Windows infrastructure of a fictional 20-person game studio: two domain controllers with DNS and DHCP failover, a file server, Exchange Server SE, an enterprise PKI, Group Policy, backups verified by restore, a print server, and an Ubuntu server joined to AD that runs Docker with a GLPI service desk (AD sign-in over LDAPS, HTTPS behind an nginx reverse proxy, tickets by email through Exchange), an intranet portal, and monitoring with Prometheus, Grafana and Alertmanager (windows_exporter deployed by Group Policy, email alerts through Exchange). Every step is documented in a lab journal, including 82 troubleshooting cases with root causes. Documentation is in Russian.
 
 Лаборатория воспроизводит инфраструктуру вымышленной игровой студии **Kurogane Digital** (黒鉄, «чёрная сталь»): около 20 сотрудников в семи отделах, игра под NDA, поэтому строгое разграничение доступа. Всё развёрнуто на одном ПК под Hyper-V на Windows Server 2025, Windows 11 и Ubuntu Server.
 
 Цель — практика системного администрирования на задачах, близких к реальной компании: не «установил роль», а «настроил, проверил и разобрал, что сломалось и почему». Каждый этап записан в [журнал](docs/journal.md) вместе с тем, как проверялся результат.
 
-**Стек:** Windows Server 2025 · Active Directory DS · DNS · DHCP Failover · Group Policy · Windows LAPS · FSRM · Exchange Server SE · AD CS · Windows Server Backup · Print Server · PowerShell · Hyper-V · Ubuntu Server · SSSD · Docker Compose · nginx · GLPI · MariaDB
+**Стек:** Windows Server 2025 · Active Directory DS · DNS · DHCP Failover · Group Policy · Windows LAPS · FSRM · Exchange Server SE · AD CS · Windows Server Backup · Print Server · PowerShell · Hyper-V · Ubuntu Server · SSSD · Docker Compose · nginx · GLPI · MariaDB · Prometheus · Grafana · Alertmanager
 
 ## Схема
 
@@ -18,7 +18,7 @@
 | DC02 | AD DS, DNS, DHCP Failover (ждущий), глобальный каталог | 192.168.100.11 |
 | FS01 | Файловый сервер, FSRM, теневые копии, центр сертификации, сервер печати | 192.168.100.30 |
 | EX01 | Exchange Server SE (SU11), две базы почтовых ящиков | 192.168.100.20 |
-| APP01 | Ubuntu Server в домене; Docker: Service Desk GLPI за обратным прокси nginx (`helpdesk.kurogane-digital.ru`) | 192.168.100.40 |
+| APP01 | Ubuntu Server в домене; Docker за обратным прокси nginx: Service Desk GLPI (`helpdesk.kurogane-digital.ru`), портал сотрудников (`intranet`), мониторинг Prometheus + Grafana + Alertmanager (`grafana`) | 192.168.100.40 |
 | WS-DEV01, WS-DESIGN01 | Рабочие места отделов Dev и Design, Windows 11 | DHCP |
 
 Лес `corp.kurogane.test`, почтовый домен и UPN — `kurogane-digital.ru`. Сеть изолирована: внутренний коммутатор Hyper-V, наружу — только через NAT на хосте.
@@ -39,6 +39,8 @@
 | Linux в домене | Ubuntu Server введён в AD через realmd/SSSD: вход по SSH и sudo только для группы ИТ, время с контроллеров домена, A и PTR в DNS регистрируются сами | [конфиги](configs/app01/system) |
 | Docker | Docker Engine и Compose из официального репозитория, ротация логов; управление только через sudo — группа docker равносильна root | [журнал](docs/journal.md#что-сделано) |
 | Service Desk (GLPI) | GLPI 12 и MariaDB в Docker Compose; вход сотрудников из AD по LDAPS с проверкой сертификата, роли по группам AD; HTTPS через обратный прокси nginx с сертификатом своего ЦС; письмо на helpdesk@ становится заявкой, уведомления и ответы идут через Exchange; реальный IP клиента в журналах | [конфиги](configs/app01) |
+| Портал сотрудников | Внутренний сайт студии в контейнере nginx без открытых портов, HTTPS через тот же обратный прокси с сертификатом своего ЦС | [конфиги](configs/app01/intranet) |
+| Мониторинг | Prometheus, Grafana и Alertmanager в Docker на APP01; windows_exporter на всех серверах через GPO: сценарий автозагрузки выбирает сборщики по ролям сервера, порт открыт только для APP01. Тревоги: недоступность сервера, остановка ключевых служб по ролям, место на дисках, квоты FSRM, расхождение времени на DC; каждая проверена настоящей поломкой. Письма о тревоге и о восстановлении идут через Exchange (SMTP 587, TLS, служебная учётка) | [схема](screenshots/08-monitoring.png), [письмо о тревоге](screenshots/09-alert-email.png), [конфиги](configs/app01/monitoring), [скрипт](scripts/monitoring/Install-WindowsExporter.ps1) |
 
 ## Скриншоты
 
@@ -47,16 +49,18 @@
 | <a href="screenshots/02-gpo-tree.png"><img src="screenshots/02-gpo-tree.png" width="380" alt="Дерево OU и GPO"></a><br>Структура OU и групповые политики | <a href="screenshots/03-replication.png"><img src="screenshots/03-replication.png" width="380" alt="repadmin и dcdiag"></a><br>Репликация без ошибок: repadmin и dcdiag |
 | <a href="screenshots/04-owa-certificate.png"><img src="screenshots/04-owa-certificate.png" width="380" alt="Сертификат OWA"></a><br>Сертификат Exchange от своего центра сертификации | <a href="screenshots/05-message-tracking.png"><img src="screenshots/05-message-tracking.png" width="380" alt="Трекинг письма"></a><br>Путь письма по журналу трекинга |
 | <a href="screenshots/06-backup-summary.png"><img src="screenshots/06-backup-summary.png" width="380" alt="Сводка бэкапов"></a><br>Бэкапы всех серверов: Get-WBSummary | <a href="screenshots/07-printers.png"><img src="screenshots/07-printers.png" width="380" alt="Принтеры на сервере печати"></a><br>Принтеры на сервере печати |
+| <a href="screenshots/08-monitoring.png"><img src="screenshots/08-monitoring.png" width="380" alt="Схема мониторинга"></a><br>Схема мониторинга: кто кого опрашивает | <a href="screenshots/09-alert-email.png"><img src="screenshots/09-alert-email.png" width="380" alt="Письмо о тревоге"></a><br>Письмо Alertmanager: DC02 недоступен |
 
 ## Неполадки и их причины
 
-Самое полезное в лабе — то, что ломалось. Все 74 случая собраны в [таблице проблем и решений](docs/troubleshooting.md). Несколько примеров:
+Самое полезное в лабе — то, что ломалось. Все 82 случая собраны в [таблице проблем и решений](docs/troubleshooting.md). Несколько примеров:
 
 - **Письма между ящиками не доставлялись: `501 5.1.4`.** Первый почтовый домен был в зоне `.test`, которую RFC 2606 резервирует для тестов, и Exchange отказывается на неё доставлять. Добавил домен `kurogane-digital.ru`, перевёл на него политику адресов и UPN пользователей — без пересборки леса.
 - **При выключенном DC01 клиент показывал `LOGONSERVER = \\DC01`.** Переменная записывается при входе, а сеанс был старым или вход шёл по кэшированным учётным данным. Кто на самом деле выполняет проверку подлинности, видно через `klist` и `nltest /dsgetdc`.
 - **Клиенты подключали принтер через `Microsoft enhanced Point and Print driver`, хотя нужный драйвер был установлен заранее.** Драйвер PCL6 Class относится к поколению v4, а для v4 Windows так делает намеренно. Ослаблять защиту от PrintNightmare не стал: для второго принтера перешёл на v3-драйвер HP, который ставится на клиенты скриптом автозагрузки. По пути выяснилось, что `pnputil` от SYSTEM отклоняет пакет с подписью самой HP, пока сертификат издателя не попадёт в «Доверенные издатели», — раздал его через GPO.
 - **После передачи ролей FSMO `dcdiag /test:fsmocheck` не находил PDC.** Контроллер держал в кэше устаревший результат поиска. Помогли `ipconfig /flushdns` и `nltest /dsgetdc /pdc /force`. Вывод: роль FSMO хранится в AD, а её местоположение — в DNS, и после передачи проверяют оба.
 - **Уведомления GLPI иногда падали по таймауту, а повтор через секунду проходил.** По протокольному журналу Exchange и журналу подключений выяснилось: после входа по SMTP фронтенд 12,7 секунды разрешал собственное имя, прежде чем передать сессию внутренней службе транспорта. У транспорта Exchange свой DNS-клиент, и он обращался к выключенному второму контроллеру домена; после сбоя сервер помечается недоступным, поэтому падала только первая отправка после простоя. Для лабы транспорт закреплён за DC01; версии с Netlogon, выбором DC, IPv6 и «холодным стартом» проверены и отброшены.
+- **Тревога об остановке службы молчала, хотя «Диспетчер печати» на FS01 был остановлен.** Ни `promtool`, ни Prometheus ошибок не показывали. windows_exporter отдаёт имена служб в том регистре, в каком они зарегистрированы в Windows (`Spooler`, `NTDS`, `DHCPServer`), а регулярные выражения PromQL чувствительны к регистру. Помог флаг `(?i)`. Вывод: правило с ошибкой не падает, а молчит, поэтому каждую тревогу проверяю настоящей поломкой.
 
 ## Скрипты
 
@@ -66,17 +70,18 @@
 | [scripts/ad/New-KuroganeShareGroups.ps1](scripts/ad) | Создаёт группы доступа к папкам отделов и вкладывает в них ролевые группы по матрице доступа |
 | [scripts/hyperv/Restore-LabNet.ps1](scripts/hyperv/Restore-LabNet.ps1) | Восстанавливает сеть лабы на хосте после сброса сети Windows; безопасно запускать повторно |
 | [scripts/printing/Install-PrinterDrivers.ps1](scripts/printing/Install-PrinterDrivers.ps1) | Ставит драйверы принтеров при загрузке компьютера от SYSTEM, не ослабляя защиту Point and Print |
-| [configs/app01](configs/app01) | Конфигурация Linux-сервера: Docker Compose для GLPI и nginx, SSSD, chrony, sudo; без паролей и ключей |
+| [scripts/monitoring/Install-WindowsExporter.ps1](scripts/monitoring/Install-WindowsExporter.ps1) | Сценарий автозагрузки из GPO: определяет роли сервера, включает нужные сборщики windows_exporter и ставит или обновляет его; повторный запуск ничего не меняет |
+| [configs/app01](configs/app01) | Конфигурация Linux-сервера: Docker Compose для GLPI, портала, мониторинга и nginx, правила тревог, SSSD, chrony, sudo; без паролей и ключей |
 
 ## Документы
 
 - [Журнал лабы](docs/journal.md): обзор, все этапы с проверками, групповые политики, план. Есть [PDF-версия](docs/Kurogane-Journal.pdf).
-- [Проблемы и решения](docs/troubleshooting.md): 74 случая.
+- [Проблемы и решения](docs/troubleshooting.md): 82 случая.
 - [Отчёт по групповым политикам](docs/gpo-report.html), выгруженный `Get-GPOReport`. Чтобы открыть его в браузере, скачайте файл.
 
 ## Что дальше
 
-Внутренний портал сотрудников в контейнере на APP01, мониторинг на Prometheus и Grafana (и для сравнения Zabbix), GLPI Agent для инвентаризации, модель уровней администрирования (tiering), автоматизация на Ansible, IP-телефония, виртуальный маршрутизатор с VLAN вместо NAT на хосте.
+Zabbix для сравнения с Prometheus, GLPI Agent для инвентаризации, модель уровней администрирования (tiering), автоматизация на Ansible, IP-телефония, виртуальный маршрутизатор с VLAN вместо NAT на хосте.
 
 ---
 

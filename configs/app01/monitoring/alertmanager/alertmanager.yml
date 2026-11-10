@@ -1,0 +1,26 @@
+global:
+  smtp_smarthost: 'mail.kurogane-digital.ru:587'
+  smtp_from: 'monitoring@kurogane-digital.ru'
+  smtp_hello: 'app01.corp.kurogane.test'
+  smtp_auth_username: 'svc_monitoring@kurogane-digital.ru'
+  smtp_auth_password_file: '/etc/alertmanager/smtp_password'
+  smtp_require_tls: true
+
+route:
+  receiver: it-email
+  group_by: ['alertname', 'instance']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  - name: it-email
+    email_configs:
+      - to: 'r.iwasaki@kurogane-digital.ru'
+        send_resolved: true
+
+inhibit_rules:
+  # "less than 5% free" makes "less than 15% free" on the same volume redundant
+  - source_matchers: ['alertname = DiskSpaceCritical']
+    target_matchers: ['alertname = DiskSpaceLow']
+    equal: ['instance', 'volume']

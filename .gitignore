@@ -12,3 +12,5 @@ HealthChecker*/
 .env
 certs/
 *.csr
+# Alertmanager SMTP password (file read via smtp_auth_password_file)
+smtp_password

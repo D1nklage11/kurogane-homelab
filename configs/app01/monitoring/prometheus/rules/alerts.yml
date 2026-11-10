@@ -1,0 +1,72 @@
+groups:
+  - name: availability
+    rules:
+      - alert: TargetDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.instance }} не отвечает"
+          description: "Prometheus не может опросить {{ $labels.instance }} (job {{ $labels.job }}) больше 2 минут: сервер выключен, завис или закрыт порт экспортера."
+
+  - name: windows
+    rules:
+      - alert: ServiceDown
+        expr: |
+          windows_service_state{role="dc", state="running", name=~"(?i)ntds|dns|kdc|netlogon|dhcpserver|w32time"} == 0
+          or windows_service_state{role="fileserver", state="running", name=~"(?i)lanmanserver|srmsvc|certsvc|spooler"} == 0
+          or windows_service_state{role="exchange", state="running", name=~"(?i)msexchangeis|msexchangetransport|msexchangefrontendtransport|w3svc"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.instance }}: служба {{ $labels.name }} не работает"
+          description: "Ключевая служба роли {{ $labels.role }} остановлена больше 2 минут."
+
+      - alert: DiskSpaceLow
+        expr: 100 * windows_logical_disk_free_bytes{volume=~"[A-Z]:"} / windows_logical_disk_size_bytes{volume=~"[A-Z]:"} < 15
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }}: на {{ $labels.volume }} свободно {{ $value | printf \"%.1f\" }}%"
+          description: "Свободного места меньше 15%."
+
+      - alert: DiskSpaceCritical
+        expr: 100 * windows_logical_disk_free_bytes{volume=~"[A-Z]:"} / windows_logical_disk_size_bytes{volume=~"[A-Z]:"} < 5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.instance }}: на {{ $labels.volume }} свободно {{ $value | printf \"%.1f\" }}%"
+          description: "Свободного места меньше 5% — служба может остановиться в любой момент."
+
+      - alert: QuotaNearlyFull
+        expr: 100 * windows_fsrmquota_usage_bytes / windows_fsrmquota_size_bytes > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }}: квота {{ $labels.path }} заполнена на {{ $value | printf \"%.0f\" }}%"
+          description: "Квота FSRM заполнена больше чем на 90%."
+
+      - alert: DCTimeOffset
+        expr: abs(windows_time_computed_time_offset_seconds{role="dc"}) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }}: расхождение времени {{ $value | printf \"%.2f\" }} с"
+          description: "Часы контроллера домена разошлись больше чем на 1 секунду; при 5 минутах перестанет работать Kerberos."
+
+  - name: linux
+    rules:
+      - alert: App01DiskLow
+        expr: 100 * node_filesystem_avail_bytes{mountpoint="/", fstype!="rootfs"} / node_filesystem_size_bytes{mountpoint="/", fstype!="rootfs"} < 15
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }}: на / свободно {{ $value | printf \"%.1f\" }}%"
+          description: "На корневом томе APP01 (Docker, базы GLPI, Prometheus) заканчивается место."

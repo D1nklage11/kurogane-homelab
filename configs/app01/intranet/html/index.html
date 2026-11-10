@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kurogane Digital — внутренний портал</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2313101d'/%3E%3Ctext x='16' y='23' font-size='18' text-anchor='middle' fill='%23ff7ac8' font-family='sans-serif' font-weight='700'%3EK%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #13101d; --panel: #1d1730; --panel-2: #241c3b; --line: #3a2f55;
+    --text: #e6e0f2; --muted: #a79dc2; --accent: #ff7ac8; --accent-2: #c9a8ff; --ok: #7fd8a6;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.55 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  }
+  a { color: var(--accent-2); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+
+  header { border-bottom: 1px solid var(--line); background: #17122a; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text); }
+  .logo { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center;
+          background: var(--panel-2); border: 1px solid var(--accent); color: var(--accent); font-weight: 700; }
+  .brand b { display: block; font-size: 17px; }
+  .brand span { font-size: 13px; color: var(--muted); }
+  nav a { color: var(--muted); text-decoration: none; margin-left: 18px; font-size: 14px; }
+  nav a:hover { color: var(--text); }
+
+  .hero { padding: 40px 0 8px; }
+  .hero h1 { margin: 0 0 6px; font-size: 30px; line-height: 1.2; }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero p { margin: 0; color: var(--muted); max-width: 680px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 28px 0 8px; }
+  .card { display: block; padding: 18px; border-radius: 14px; background: var(--panel);
+          border: 1px solid var(--line); text-decoration: none; color: var(--text); transition: border-color .15s, transform .15s; }
+  a.card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .card .ic { font-size: 22px; }
+  .card h3 { margin: 8px 0 4px; font-size: 17px; }
+  .card p { margin: 0; font-size: 14px; color: var(--muted); }
+  .card code { color: var(--accent-2); }
+
+  section { padding: 34px 0 6px; }
+  section h2 { font-size: 22px; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 2px solid var(--line); }
+  section h2 span { color: var(--accent); }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+  .box h3 { margin: 0 0 8px; font-size: 17px; }
+  .box p, .box li { color: var(--text); font-size: 15px; }
+  .box ol, .box ul { margin: 6px 0 0; padding-left: 20px; }
+  .box li { margin: 4px 0; }
+  .note { color: var(--muted); font-size: 14px; }
+  code { font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 14px; background: var(--panel-2);
+         padding: 1px 6px; border-radius: 5px; }
+  kbd { font-family: inherit; font-size: 13px; padding: 1px 7px; border-radius: 5px; border: 1px solid var(--line); background: var(--panel-2); }
+
+  .path { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .copy { cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--muted);
+          border-radius: 6px; font-size: 12px; padding: 2px 8px; }
+  .copy:hover { color: var(--text); border-color: var(--accent-2); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+
+  .rules li { margin: 8px 0; }
+  .rules b { color: #ffc2e6; }
+
+  footer { margin-top: 40px; border-top: 1px solid var(--line); padding: 18px 0 28px; color: var(--muted); font-size: 13px; }
+
+  @media (max-width: 640px) {
+    nav { width: 100%; } nav a { margin: 0 14px 0 0; }
+    .hero h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap top">
+    <a class="brand" href="/">
+      <div class="logo">K</div>
+      <div><b>Kurogane Digital</b><span>внутренний портал · 黒鉄</span></div>
+    </a>
+    <nav>
+      <a href="#support">Поддержка</a>
+      <a href="#files">Файлы</a>
+      <a href="#printers">Принтеры</a>
+      <a href="#rooms">Переговорные</a>
+      <a href="#rules">Правила</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <h1>Добро пожаловать в <em>Kurogane Digital</em></h1>
+    <p>Здесь собрано всё, что нужно в первый рабочий день и потом: почта, заявки в техподдержку, общие папки, принтеры и правила работы с проектом под NDA.</p>
+  </div>
+
+  <div class="cards">
+    <a class="card" href="https://mail.kurogane-digital.ru/owa">
+      <div class="ic">✉️</div><h3>Почта и календарь</h3>
+      <p>Outlook в браузере. Вход — рабочей учётной записью.</p>
+    </a>
+    <a class="card" href="https://helpdesk.kurogane-digital.ru">
+      <div class="ic">🛠️</div><h3>Service Desk</h3>
+      <p>Заявки в техподдержку и их статус. Вход — рабочей учётной записью.</p>
+    </a>
+    <a class="card" href="mailto:helpdesk@kurogane-digital.ru">
+      <div class="ic">📨</div><h3>Написать в поддержку</h3>
+      <p><code>helpdesk@kurogane-digital.ru</code> — письмо сразу становится заявкой.</p>
+    </a>
+    <a class="card" href="#files">
+      <div class="ic">📁</div><h3>Общие папки</h3>
+      <p>Папки отделов и ассеты — на дисках <code>S:</code> и <code>W:</code>.</p>
+    </a>
+  </div>
+
+  <section id="support">
+    <h2><span>01</span> Техподдержка</h2>
+    <div class="grid2">
+      <div class="box">
+        <h3>Как оставить заявку</h3>
+        <ol>
+          <li>Напишите на <a href="mailto:helpdesk@kurogane-digital.ru">helpdesk@kurogane-digital.ru</a> или создайте заявку в <a href="https://helpdesk.kurogane-digital.ru">Service Desk</a>.</li>
+          <li>В теме — суть проблемы: «Не печатает KG-Office», а не «Помогите».</li>
+          <li>В письме — что делали, что ожидали и что получили. Скриншот ошибки очень помогает.</li>
+        </ol>
+        <p class="note">В ответ придёт письмо с номером заявки. Чтобы дополнить заявку, просто ответьте на это письмо — текст попадёт в ту же заявку.</p>
+      </div>
+      <div class="box">
+        <h3>Что дальше</h3>
+        <ul>
+          <li>Техник возьмёт заявку в работу — вы получите письмо.</li>
+          <li>Когда проблема решена, придёт письмо с описанием решения.</li>
+          <li>Если всё работает, отвечать не нужно: заявка закроется сама через 3 дня.</li>
+          <li>Если не помогло — ответьте на письмо, и заявка вернётся в работу.</li>
+        </ul>
+        <p class="note">Сотрудники ИТ никогда не спрашивают ваш пароль — ни по почте, ни в мессенджере, ни лично.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="files">
+    <h2><span>02</span> Файлы и сетевые диски</h2>
+    <div class="grid2">
+      <div class="box">
+        <h3>Где что лежит</h3>
+        <table>
+          <tr><th>Диск</th><th>Что это</th></tr>
+          <tr><td><code>S:</code></td><td>Общие папки отделов. Вы видите только папки, к которым у вас есть доступ.</td></tr>
+          <tr><td><code>W:</code></td><td>Ассеты проекта — для отделов, которые с ними работают.</td></tr>
+          <tr><td>Документы</td><td>Ваша папка «Документы» хранится на сервере: файлы не пропадут при замене компьютера.</td></tr>
+        </table>
+        <div class="path"><code>\\FS01\Shares</code><button class="copy" data-copy="\\FS01\Shares">копировать</button></div>
+        <p class="note">Если диск не появился — выйдите из системы и войдите снова. Не помогло — заявка в поддержку.</p>
+      </div>
+      <div class="box">
+        <h3>Случайно удалили или испортили файл?</h3>
+        <ol>
+          <li>Откройте папку, где лежал файл, на диске <code>S:</code> или <code>W:</code>.</li>
+          <li>Правой кнопкой по папке → <b>Свойства</b> → вкладка <b>Предыдущие версии</b>.</li>
+          <li>Выберите версию по дате и нажмите <b>Открыть</b>, чтобы скопировать нужный файл.</li>
+        </ol>
+        <p class="note">Если нужной версии нет — напишите в поддержку: файлы серверов ежедневно копируются в резервное хранилище.</p>
+        <p class="note">Папка Public — для небольших файлов: видео и исполняемые файлы туда не сохраняются.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="printers">
+    <h2><span>03</span> Принтеры</h2>
+    <div class="grid2">
+      <div class="box">
+        <h3>Какие есть</h3>
+        <table>
+          <tr><th>Принтер</th><th>Для кого</th></tr>
+          <tr><td><b>KG-Office</b></td><td>Для всех, принтер по умолчанию</td></tr>
+          <tr><td><b>KG-Color</b></td><td>Отделы Art и Design</td></tr>
+        </table>
+        <p class="note">Принтеры подключаются сами при входе в систему — устанавливать ничего не нужно.</p>
+      </div>
+      <div class="box">
+        <h3>Принтер не появился</h3>
+        <ol>
+          <li>Выйдите из системы и войдите снова (или перезагрузите компьютер).</li>
+          <li>Проверьте: <b>Пуск → Параметры → Bluetooth и устройства → Принтеры и сканеры</b>.</li>
+          <li>Если принтера всё ещё нет или Windows просит права администратора — не ищите драйверы в интернете, оставьте заявку.</li>
+        </ol>
+        <p class="note">Документ завис в очереди? Не отправляйте его повторно — напишите в поддержку, очередь очистят.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="rooms">
+    <h2><span>04</span> Переговорные и стенд</h2>
+    <div class="box">
+      <table>
+        <tr><th>Ресурс</th><th>Мест</th><th>Условия</th></tr>
+        <tr><td><b>Room-Rooftop</b></td><td>12</td><td>Встречи до 4 часов</td></tr>
+        <tr><td><b>Room-Neon</b></td><td>4</td><td>Небольшие встречи</td></tr>
+        <tr><td><b>Neural-Rig-01</b></td><td>—</td><td>Рабочий стенд, бронь подтверждает руководитель</td></tr>
+      </table>
+      <p class="note">Как забронировать: создайте встречу в календаре Outlook и добавьте переговорную в участники. Если время занято, придёт отказ.</p>
+    </div>
+  </section>
+
+  <section id="rules">
+    <h2><span>05</span> Правила NDA и безопасности</h2>
+    <div class="box">
+      <ul class="rules">
+        <li><b>Проект под NDA.</b> Сборки, ассеты, скриншоты и документы не выносим за пределы студии — ни в личную почту, ни в облако, ни в мессенджеры.</li>
+        <li><b>USB-накопители</b> на рабочих компьютерах отделов с ассетами отключены. Нужно передать файл — обратитесь в поддержку.</li>
+        <li><b>Уходите от компьютера — блокируйте его:</b> <kbd>Win</kbd> + <kbd>L</kbd>. Экран блокируется сам через 10 минут бездействия.</li>
+        <li><b>Пароль</b> — не короче 12 символов и только ваш. После 10 неверных попыток учётная запись блокируется: разблокирует техподдержка.</li>
+        <li><b>Подозрительное письмо</b> (просят пароль, срочно оплатить, открыть вложение) — не открывайте вложения и перешлите письмо на helpdesk@.</li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">Kurogane Digital · внутренний портал · вопросы и ошибки на этой странице — <a href="mailto:helpdesk@kurogane-digital.ru">helpdesk@kurogane-digital.ru</a></div>
+</footer>
+
+<script>
+  document.querySelectorAll('.copy').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var t = b.getAttribute('data-copy');
+      var done = function () { b.textContent = 'скопировано'; setTimeout(function () { b.textContent = 'копировать'; }, 1500); };
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(t).then(done, function () {});
+      }
+    });
+  });
+</script>
+</body>
+</html>
