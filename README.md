@@ -32,7 +32,7 @@
 | Active Directory | Лес с двумя контроллерами домена, репликация, сайт, время от PDC; структура OU по отделам; пользователи и группы создаются скриптом из CSV | [repadmin и dcdiag](screenshots/03-replication.png), [скрипты](scripts/ad) |
 | DHCP Failover | Горячая замена между DC01 и DC02; отказ основного сервера проверен | [журнал](docs/journal.md#что-сделано) |
 | Файловый сервер | Права по модели AGDLP, Access-Based Enumeration, квоты и блокировка файлов FSRM, теневые копии, личные папки | [журнал](docs/journal.md#что-сделано) |
-| Групповые политики | 15 GPO: пароли и Fine-Grained Password Policy, Windows LAPS, диски и перенаправление папок по группам, запрет USB, вход на серверы, принтеры | [дерево GPO](screenshots/02-gpo-tree.png), [отчёт по всем GPO](docs/gpo-report.html) |
+| Групповые политики | 16 GPO: пароли и Fine-Grained Password Policy, Windows LAPS, диски и перенаправление папок по группам, запрет USB, вход на серверы, принтеры, установка агента мониторинга на серверы | [дерево GPO](screenshots/02-gpo-tree.png), [отчёт по всем GPO](docs/gpo-report.html) |
 | Exchange Server SE | Установка по документации Microsoft, обновление безопасности, аудит HealthChecker; общие ящики и переговорные с правами через группы, динамические рассылки, смена почтового домена и UPN | [трекинг письма](screenshots/05-message-tracking.png) |
 | PKI | Корпоративный корневой центр сертификации AD CS, свой шаблон, SAN-сертификат для Exchange, Download Domains | [сертификат в браузере](screenshots/04-owa-certificate.png) |
 | Резервное копирование | Windows Server Backup на всех серверах, бэкап ключа ЦС; восстановление проверено: файл, объект AD, письмо через Recovery Database | [сводка по серверам](screenshots/06-backup-summary.png) |
@@ -54,7 +54,7 @@
 | <a href="screenshots/08-monitoring.png"><img src="screenshots/08-monitoring.png" width="380" alt="Схема мониторинга"></a><br>Схема мониторинга: кто кого опрашивает | <a href="screenshots/09-alert-email.png"><img src="screenshots/09-alert-email.png" width="380" alt="Письмо о тревоге"></a><br>Письмо Alertmanager: DC02 недоступен |
 | <a href="screenshots/10-grafana-windows.png"><img src="screenshots/10-grafana-windows.png" width="380" alt="Дашборд Windows в Grafana"></a><br>Grafana: серверы Windows, детали по EX01 | <a href="screenshots/11-prometheus-up.png"><img src="screenshots/11-prometheus-up.png" width="380" alt="Метрика up"></a><br>Метрика `up`: DC02 выключен — по ней сработала тревога TargetDown |
 | <a href="screenshots/12-alert-rules.png"><img src="screenshots/12-alert-rules.png" width="380" alt="Правила тревог"></a><br>Семь правил тревог в Grafana: TargetDown горит, DCTimeOffset в ожидании | <a href="screenshots/13-glpi-ticket.png"><img src="screenshots/13-glpi-ticket.png" width="380" alt="Заявка GLPI из письма"></a><br>GLPI: заявка из письма, ответы по почте, решение |
-| <a href="screenshots/14-intranet.png"><img src="screenshots/14-intranet.png" width="380" alt="Портал сотрудников"></a><br>Портал сотрудников: intranet.kurogane-digital.ru | |
+| <a href="screenshots/14-intranet.png"><img src="screenshots/14-intranet.png" width="380" alt="Портал сотрудников"></a><br>Портал сотрудников: intranet.kurogane-digital.ru | <a href="screenshots/04-owa-connection.png"><img src="screenshots/04-owa-connection.png" width="380" alt="Защищённое подключение к OWA"></a><br>OWA: подключение защищено, браузер доверяет своему ЦС |
 
 ## Неполадки и их причины
 
