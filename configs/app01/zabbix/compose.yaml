@@ -1,0 +1,53 @@
+name: zabbix
+
+services:
+  zabbix-db:
+    image: postgres:17.11-alpine
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - zabbix_db:/var/lib/postgresql/data
+    networks: [zabbix]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zabbix -d zabbix"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql:alpine-8.0.0
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_SERVER_HOST: zabbix-db
+    ports:
+      - "192.168.100.40:10051:10051"
+    volumes:
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      zabbix-db:
+        condition: service_healthy
+    networks: [zabbix]
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-8.0.0
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_SERVER_HOST: zabbix-db
+      ZBX_SERVER_HOST: zabbix-server
+      ZBX_SERVER_NAME: Kurogane Digital
+      PHP_TZ: Asia/Novokuznetsk
+    depends_on:
+      - zabbix-server
+    networks: [zabbix, proxy]
+
+networks:
+  zabbix:
+    name: zabbix
+  proxy:
+    external: true
+
+volumes:
+  zabbix_db:

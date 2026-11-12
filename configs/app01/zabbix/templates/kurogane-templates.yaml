@@ -1,0 +1,158 @@
+zabbix_export:
+  version: '8.0'
+  template_groups:
+    - uuid: 8f6689899bf44272a31652ffddd7003a
+      name: Templates/Kurogane
+  templates:
+    - uuid: e041136589fc4f6599d8edd442048849
+      template: 'Kurogane AD DC'
+      name: 'Kurogane AD DC'
+      description: 'Проверки контроллера домена, которых нет в Windows by Zabbix agent active: DNS отвечает (SOA зоны и SRV-запись поиска DC), LDAP и Kerberos принимают подключения, расхождение времени, очередь репликации AD. Пороги — в макросах шаблона.'
+      groups:
+        - name: Templates/Kurogane
+      items:
+        - uuid: 1f39648454ea48b3885c8ab7b08caf3a
+          name: 'DNS: SOA corp.kurogane.test'
+          type: ZABBIX_ACTIVE
+          key: 'net.dns[127.0.0.1,corp.kurogane.test,SOA,2,1]'
+          history: 7d
+          description: '1 — локальный DNS-сервер вернул SOA зоны домена, 0 — нет ответа.'
+          valuemap:
+            name: 'Kurogane up/down'
+          tags:
+            - tag: component
+              value: dns
+          triggers:
+            - uuid: 40434b59fe7f4d0895879c5343a56a93
+              expression: 'max(/Kurogane AD DC/net.dns[127.0.0.1,corp.kurogane.test,SOA,2,1],#3)=0'
+              name: 'AD DC {HOST.NAME}: DNS не отвечает на запрос SOA зоны corp.kurogane.test'
+              priority: HIGH
+              description: 'Три проверки подряд (около 3 минут) без ответа.'
+              tags:
+                - tag: scope
+                  value: availability
+        - uuid: fc09d3804a4242e89a92edd03de3bff5
+          name: 'DNS: SRV _ldap._tcp.dc._msdcs'
+          type: ZABBIX_ACTIVE
+          key: 'net.dns[127.0.0.1,_ldap._tcp.dc._msdcs.corp.kurogane.test,SRV,2,1]'
+          history: 7d
+          description: '1 — есть SRV-запись, по которой клиенты находят DC; 0 — записи нет или DNS не ответил.'
+          valuemap:
+            name: 'Kurogane up/down'
+          tags:
+            - tag: component
+              value: dns
+          triggers:
+            - uuid: 12ad4313920a48bb98b1a0ed25e2cd40
+              expression: 'max(/Kurogane AD DC/net.dns[127.0.0.1,_ldap._tcp.dc._msdcs.corp.kurogane.test,SRV,2,1],#3)=0'
+              name: 'AD DC {HOST.NAME}: нет SRV-записи поиска контроллеров домена'
+              priority: HIGH
+              description: 'Три проверки подряд (около 3 минут) без ответа.'
+              tags:
+                - tag: scope
+                  value: availability
+        - uuid: 2eacda133b734a0092c612fafc2362f3
+          name: 'Kerberos 88: порт открыт'
+          type: ZABBIX_ACTIVE
+          key: 'net.tcp.port[127.0.0.1,88]'
+          history: 7d
+          description: '1 — порт 88 принимает TCP-подключения, 0 — нет.'
+          valuemap:
+            name: 'Kurogane up/down'
+          tags:
+            - tag: component
+              value: kerberos
+          triggers:
+            - uuid: 23fd16223b87422895c629400e6f9746
+              expression: 'max(/Kurogane AD DC/net.tcp.port[127.0.0.1,88],#3)=0'
+              name: 'AD DC {HOST.NAME}: Kerberos (порт 88) не принимает подключения'
+              priority: HIGH
+              description: 'Три проверки подряд (около 3 минут) без ответа.'
+              tags:
+                - tag: scope
+                  value: availability
+        - uuid: 05d0a20704f440a9b7d31ccde798e5c3
+          name: 'LDAP 389: служба отвечает'
+          type: ZABBIX_ACTIVE
+          key: 'net.tcp.service[ldap,127.0.0.1,389]'
+          history: 7d
+          description: '1 — LDAP-сервер ответил на запрос, 0 — нет.'
+          valuemap:
+            name: 'Kurogane up/down'
+          tags:
+            - tag: component
+              value: ldap
+          triggers:
+            - uuid: 5860d3e591b94fc78292719c9b48b079
+              expression: 'max(/Kurogane AD DC/net.tcp.service[ldap,127.0.0.1,389],#3)=0'
+              name: 'AD DC {HOST.NAME}: LDAP на порту 389 не отвечает'
+              priority: HIGH
+              description: 'Три проверки подряд (около 3 минут) без ответа.'
+              tags:
+                - tag: scope
+                  value: availability
+        - uuid: 76283dfcf8074562b55ec8e0f3554231
+          name: 'Репликация AD: ожидающие синхронизации'
+          type: ZABBIX_ACTIVE
+          key: 'perf_counter_en["\DirectoryServices(NTDS)\DRA Pending Replication Synchronizations"]'
+          history: 30d
+          description: 'DRA Pending Replication Synchronizations — сколько синхронизаций каталога ждут выполнения.'
+          tags:
+            - tag: component
+              value: replication
+          triggers:
+            - uuid: 80d091f397fd460a873ba853d865a941
+              expression: 'min(/Kurogane AD DC/perf_counter_en["\DirectoryServices(NTDS)\DRA Pending Replication Synchronizations"],30m)>{$DC.REPL.PENDING.MAX}'
+              name: 'AD DC {HOST.NAME}: очередь репликации не пустая 30 минут'
+              priority: AVERAGE
+              description: 'Синхронизации копятся полчаса: проверить repadmin /replsummary и связь с другим DC.'
+        - uuid: 1ef532ede7bb49d4913ace93954b2677
+          name: 'Время: расхождение с источником'
+          type: ZABBIX_ACTIVE
+          key: 'perf_counter_en["\Windows Time Service\Computed Time Offset"]'
+          history: 30d
+          value_type: FLOAT
+          units: s
+          description: 'Computed Time Offset службы времени Windows, пересчитан из микросекунд в секунды.'
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '1.0E-6'
+          tags:
+            - tag: component
+              value: time
+          triggers:
+            - uuid: 111e04283b854b989786dd5968d63f48
+              expression: 'min(/Kurogane AD DC/perf_counter_en["\Windows Time Service\Computed Time Offset"],10m)>{$DC.TIME.OFFSET.MAX} or max(/Kurogane AD DC/perf_counter_en["\Windows Time Service\Computed Time Offset"],10m)<-{$DC.TIME.OFFSET.MAX}'
+              name: 'AD DC {HOST.NAME}: часы расходятся с источником больше чем на {$DC.TIME.OFFSET.MAX} с'
+              priority: AVERAGE
+              description: 'Расхождение держится 10 минут. Допуск Kerberos — 5 минут, порог ниже — ранний сигнал.'
+      macros:
+        - macro: '{$DC.REPL.PENDING.MAX}'
+          value: '0'
+          description: 'Допустимое число ожидающих синхронизаций репликации'
+        - macro: '{$DC.TIME.OFFSET.MAX}'
+          value: '1'
+          description: 'Допустимое расхождение времени, секунд'
+      valuemaps:
+        - uuid: e07e842b191247cbba3ec78eccea948a
+          name: 'Kurogane up/down'
+          mappings:
+            - value: '0'
+              newvalue: Down
+            - value: '1'
+              newvalue: Up
+    - uuid: 173008d5bd5741cd8e4a8d99a53eba3c
+      template: 'Kurogane Windows server'
+      name: 'Kurogane Windows server'
+      templates:
+        - name: 'Windows by Zabbix agent active'
+      groups:
+        - name: Templates/Kurogane
+      macros:
+        - macro: '{$AGENT.NODATA_TIMEOUT}'
+          value: 5m
+          description: '30m по умолчанию — слишком долго; TargetDown в Prometheus срабатывает через 2m'
+        - macro: '{$SERVICE.NAME.NOT_MATCHES}'
+          value: '^(?:RemoteRegistry|MMCSS|gupdate|SysmonLog|clr_optimization_v.+|sppsvc|gpsvc|Pml Driver HPZ12|Net Driver HPZ12|MapsBroker|IntelAudioService|Intel\(R\) TPM Provisioning Service|dbupdate|DoSvc|CDPUserSvc_.+|WpnUserService_.+|OneSyncSvc_.+|WbioSrvc|BITS|tiledatamodelsvc|GISvc|ShellHWDetection|TrustedInstaller|TabletInputService|CDPSvc|wuauserv|edgeupdate|cbdhsvc_.+|InventorySvc)$'
+          description: '+ InventorySvc: Server 2025 stops it by itself'
